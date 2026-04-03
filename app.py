@@ -6,7 +6,7 @@ import pandas as pd
 
 # --- إعدادات الصفحة ---
 st.set_page_config(page_title="Optical survivability Suite", layout="wide")
-st.title("🛡️ Enterprise Optical Network: Survivability & RWA")
+st.title(" Enterprise Optical Network: Survivability & RWA")
 st.markdown("This system manages **Working** and **Backup** lightpaths with high reliability.")
 
 # --- 1. بيانات الشبكة والفيزياء ---
@@ -26,10 +26,10 @@ if 'demands' not in st.session_state:
     st.session_state.demands = [{"src": 1, "dst": 4, "name": "Critical_Link_01"}]
 
 # --- 3. القائمة الجانبية ---
-st.sidebar.header("🚀 Network Control")
+st.sidebar.header(" Network Control")
 waves_limit = st.sidebar.slider("Wavelengths per Fiber", 1, 20, 12)
 
-with st.sidebar.expander("📝 Add Protected Service"):
+with st.sidebar.expander(" Add Protected Service"):
     s_n = st.selectbox("From Node", nodes, index=0)
     d_n = st.selectbox("To Node", nodes, index=4)
     s_name = st.text_input("Service Name", f"Svc_{len(st.session_state.demands)+1}")
@@ -40,7 +40,7 @@ with st.sidebar.expander("📝 Add Protected Service"):
 if st.sidebar.button("Clear Network"):
     st.session_state.demands = []
 
-st.sidebar.header("💥 Stress Test")
+st.sidebar.header(" Stress Test")
 fail_active = st.sidebar.checkbox("Simulate Fiber Cut")
 failed_link = st.sidebar.selectbox("Select Fiber to Cut", base_links)
 
