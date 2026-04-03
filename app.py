@@ -1,6 +1,5 @@
 import streamlit as st
 import pulp
-import nx_helper # Ignore this, just standard networkx
 import networkx as nx
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -137,10 +136,9 @@ with c2:
     nx.draw_networkx_nodes(G, pos, node_size=900, node_color='#111', edgecolors='#00defa', ax=ax)
     nx.draw_networkx_labels(G, pos, font_color='white', font_weight='bold', ax=ax)
     
-    # Draw Base Links and Labels (FIXED SCRIPT)
+    # Draw Base Links and Labels
     for u, v in base_links:
         dist_val = link_distances[(u,v)]
-        # This was the error line - now fixed with xy=pos
         mid_point = (pos[u] + pos[v]) / 2
         ax.annotate(f"{dist_val}km", xy=mid_point, alpha=0.6, color='gray', ha='center', fontsize=9)
     
