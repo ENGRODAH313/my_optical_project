@@ -4,42 +4,44 @@ import networkx as nx
 import matplotlib.pyplot as plt
 import pandas as pd
 
-# --- Page Config ---
-st.set_page_config(page_title="Optical RWA Simulator", layout="wide")
+# --- Configuration ---
+st.set_page_config(page_title="Ultra Optical RWA Suite", layout="wide")
+st.title("🚀 Ultra Optical Network Management & RWA Suite")
 
-st.title("🌐 Optical Network RWA Management System")
-st.markdown("This system simulates Routing and Wavelength Assignment (RWA) based on ILP formulations.")
+# --- Sidebar: Dynamic Inputs ---
+st.sidebar.header("1. Network Resources")
+num_waves = st.sidebar.slider("Wavelength Capacity per Link", 1, 8, 4)
 
-# --- Sidebar Controls ---
-st.sidebar.header("Network Settings")
-num_waves = st.sidebar.slider("Available Wavelengths", 1, 5, 3)
-st.sidebar.subheader("Fault Management")
-simulate_fail = st.sidebar.checkbox("Simulate Link Failure")
-failed_link_choice = st.sidebar.selectbox("Select Link to Fail", [(1,4), (2,3), (5,6), (7,1)])
+st.sidebar.header("2. Traffic Management")
+src = st.sidebar.selectbox("Source Node", [1, 2, 3, 4, 5, 6, 7], index=0)
+dst = st.sidebar.selectbox("Destination Node", [1, 2, 3, 4, 5, 6, 7], index=3)
+if st.sidebar.button("Add New Demand"):
+    if 'custom_demands' not in st.session_state:
+        st.session_state.custom_demands = [(1,4), (2,5), (7,3)]
+    if (src, dst) not in st.session_state.custom_demands and src != dst:
+        st.session_state.custom_demands.append((src, dst))
+        st.sidebar.success(f"Added: {src} -> {dst}")
 
-# --- 1. Define Network Data ---
+st.sidebar.header("3. Fault Simulation")
+simulate_fail = st.sidebar.checkbox("Activate Link Failure")
+fail_choice = st.sidebar.selectbox("Select Failed Link", [(1,2), (2,3), (1,4), (6,7)])
+
+# --- Data Setup ---
 nodes = [1, 2, 3, 4, 5, 6, 7]
-all_links = [(1,2), (2,3), (3,4), (4,5), (5,6), (6,7), (7,1), (2,7), (3,6), (1,4)]
-# Make it bidirectional for the solver
-links = all_links + [(v, u) for u, v in all_links]
-sd_pairs = [(1,4), (2,5), (7,3), (6,2)]
+base_links = [(1,2), (2,3), (3,4), (4,5), (5,6), (6,7), (7,1), (2,7), (3,6), (1,4)]
+links = base_links + [(v, u) for u, v in base_links]
+sd_pairs = st.session_state.get('custom_demands', [(1,4), (2,5), (7,3)])
 wavelengths = list(range(1, num_waves + 1))
 
-# --- 2. RWA Solver Function ---
-def solve_rwa(link_to_fail=None):
-    # Remove failed link if requested
-    active_links = [l for l in links if l != link_to_fail and (l[1], l[0]) != link_to_fail]
-    
-    prob = pulp.LpProblem("RWA_Optimization", pulp.LpMinimize)
-    
-    # Variables
+# --- Solver Engine ---
+def solve_advanced_rwa(fail_l=None):
+    active_links = [l for l in links if l != fail_l and (l[1], l[0]) != fail_l]
+    prob = pulp.LpProblem("Ultra_RWA", pulp.LpMinimize)
     f = pulp.LpVariable.dicts("flow", (sd_pairs, active_links, wavelengths), 0, 1, pulp.LpInteger)
     ff = pulp.LpVariable.dicts("wave", (sd_pairs, wavelengths), 0, 1, pulp.LpInteger)
 
-    # Objective: Minimize total wavelength-links used
     prob += pulp.lpSum(f[s][l][w] for s in sd_pairs for l in active_links for w in wavelengths)
 
-    # Constraints
     for s in sd_pairs:
         prob += pulp.lpSum(ff[s][w] for w in wavelengths) == 1
         for n in nodes:
@@ -56,54 +58,58 @@ def solve_rwa(link_to_fail=None):
 
     prob.solve(pulp.PULP_CBC_CMD(msg=0))
     
-    output = []
+    res = []
+    utilization = {l: 0 for l in base_links}
     if pulp.LpStatus[prob.status] == 'Optimal':
         for s in sd_pairs:
             for w in wavelengths:
                 path = [l for l in active_links if pulp.value(f[s][l][w]) == 1]
                 if path:
-                    output.append({"Demand": f"{s[0]} \u2192 {s[1]}", "Wavelength": f"λ{w}", "Path": path})
-    return output, pulp.value(prob.objective)
+                    res.append({"Demand": f"{s[0]} \u2192 {s[1]}", "Wave": f"λ{w}", "Path": path})
+                    for lp in path:
+                        norm_l = tuple(sorted(lp))
+                        if norm_l in utilization: utilization[norm_l] += 1
+    return res, utilization, pulp.value(prob.objective)
 
-# --- 3. Execute and Show Results ---
-target_fail = failed_link_choice if simulate_fail else None
-results, total_cost = solve_rwa(target_fail)
+# --- Execute & Layout ---
+results, usage, cost = solve_advanced_rwa(fail_choice if simulate_fail else None)
 
-col1, col2 = st.columns([1, 2])
+m_col1, m_col2 = st.columns([1, 1.5])
 
-with col1:
-    st.subheader("Results Summary")
-    if results:
-        st.success(f"Optimal Solution Found!")
-        st.metric("Total Link Usage Cost", int(total_cost))
-        st.write("#### Lightpath Assignments")
-        st.table(pd.DataFrame(results)[["Demand", "Wavelength", "Path"]])
-    else:
-        st.error("No Solution Found! Try increasing wavelengths.")
-
-with col2:
-    st.subheader("Network Topology Map")
-    G = nx.Graph()
-    G.add_nodes_from(nodes)
-    G.add_edges_from(all_links)
+with m_col1:
+    st.subheader("📊 Network Analytics")
+    st.metric("Total Link-Wavelength Resources Used", int(cost) if results else 0)
     
+    if results:
+        st.write("#### Active Lightpaths")
+        st.dataframe(pd.DataFrame(results), use_container_width=True)
+        
+        st.write("#### Link Utilization (Wavelengths per Link)")
+        usage_df = pd.DataFrame([{"Link": k, "Load": v} for k, v in usage.items()])
+        st.bar_chart(usage_df.set_index("Link"))
+    else:
+        st.error("Network Congested: Cannot route all demands. Increase Wavelengths!")
+
+with m_col2:
+    st.subheader("🗺️ Live Topology Map")
+    G = nx.Graph()
+    G.add_edges_from(base_links)
     pos = nx.kamada_kawai_layout(G)
     fig, ax = plt.subplots(figsize=(10, 8))
     
-    # Draw base network
-    nx.draw_networkx_nodes(G, pos, node_size=800, node_color='#1f77b4', ax=ax)
+    nx.draw_networkx_nodes(G, pos, node_size=900, node_color='#0E1117', edgecolors='#00FFAA', ax=ax)
     nx.draw_networkx_labels(G, pos, font_color='white', font_weight='bold', ax=ax)
-    nx.draw_networkx_edges(G, pos, edgelist=all_links, edge_color='lightgray', style='dashed', alpha=0.5, ax=ax)
+    nx.draw_networkx_edges(G, pos, edgelist=base_links, edge_color='#555555', style='dashed', alpha=0.3, ax=ax)
     
-    # Highlight Failed Link
     if simulate_fail:
-        nx.draw_networkx_edges(G, pos, edgelist=[failed_link_choice], edge_color='black', width=5, style='dotted', ax=ax)
-        st.warning(f"Note: Link {failed_link_choice} is currently DOWN.")
+        nx.draw_networkx_edges(G, pos, edgelist=[fail_choice], edge_color='red', width=6, ax=ax)
+        st.warning(f"⚠️ ALERT: Fiber Cut detected at Link {fail_choice}!")
 
-    # Draw active lightpaths
-    path_colors = ['red', 'green', 'blue', 'orange', 'purple']
-    for i, res in enumerate(results):
-        nx.draw_networkx_edges(G, pos, edgelist=res['Path'], edge_color=path_colors[i % len(path_colors)], width=3.5, ax=ax)
-
-    ax.axis('off')
+    colors = ['#FF4B4B', '#1C83E1', '#00FF00', '#F63366', '#FFAA00', '#7D3C98']
+    for i, r in enumerate(results):
+        nx.draw_networkx_edges(G, pos, edgelist=r['Path'], edge_color=colors[i % len(colors)], width=4, ax=ax, label=r['Demand'])
+    
+    ax.set_facecolor('#0E1117')
+    fig.patch.set_facecolor('#0E1117')
+    plt.legend(facecolor='#0E1117', labelcolor='white')
     st.pyplot(fig)
