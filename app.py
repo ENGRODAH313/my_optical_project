@@ -4,44 +4,39 @@ import networkx as nx
 import matplotlib.pyplot as plt
 import pandas as pd
 
-# --- 1. إعدادات الصفحة والترحيب ---
-st.set_page_config(page_title="Optical survivability Suite", layout="wide")
+# --- 1. إعدادات الهوية وصفحة الترحيب ---
+st.set_page_config(page_title="Optical Network System", layout="wide")
 
-# استخدام Session State للتحكم في ظهور صفحة الترحيب
 if 'entered' not in st.session_state:
     st.session_state.entered = False
 
 if not st.session_state.entered:
-    # --- واجهة الترحيب (Landing Page) ---
+    # واجهة الترحيب
     st.markdown("<br><br>", unsafe_allow_html=True)
-    st.balloons() # تأثير احتفالي بسيط عند الفتح
-    
     col_t1, col_t2, col_t3 = st.columns([1, 2, 1])
+    
     with col_t2:
-        st.image("https://cdn-icons-png.flaticon.com/512/2103/2103633.png", width=100) # أيقونة تعبر عن الألياف
-        st.title(" مشروع نظام إدارة الشبكات الضوئية")
-        st.header("إعداد الطالب: رضا صلاح الدين ,مصطفى صلاح ")
-        st.subheader("Technological University
-        كلية: هندسة الاتصالات ضوئية 
-        الاشراف: د. احمد جياد كاظم")
-        st.markdown("""
-        ---
-        **وصف المشروع:**
-        نظام محاكاة ذكي لتخطيط المسارات وتوزيع الأطوال الموجية (RWA) 
-        مع تفعيل خاصية الحماية الذاتية (1+1 Protection) لضمان استمرارية الخدمة.
-        """)
+        # إضافة شعار بسيط
+        st.image("https://cdn-icons-png.flaticon.com/512/2103/2103633.png", width=80)
         
-        if st.button("(Enter Dashboard)"):
+        # المعلومات التي طلبتها بالضبط
+        st.title("نظام إدارة وتخطيط الشبكات الضوئية")
+        st.subheader("Technological University")
+        st.write("### كلية: هندسة الاتصالات ضوئية")
+        st.write("### الاشراف: د. احمد جياد كاظم")
+        
+        st.markdown("---")
+        st.info(f"إعداد الطالب: رضا صلاح الدين , مصطفى صلاح")
+        
+        if st.button("🚀 الدخول إلى النظام (Enter Dashboard)"):
             st.session_state.entered = True
             st.rerun()
-    st.stop() # إيقاف التنفيذ هنا حتى يضغط المستخدم على الزر
+    st.stop()
 
-# --- 2. محتوى المشروع الأساسي (يظهر بعد الضغط على الزر) ---
-st.title(" لوحة تحكم الشبكة الضوئية الذكية")
-st.sidebar.success("تم تسجيل الدخول بنجاح")
+# --- 2. الكود الأساسي للمحاكاة (يظهر بعد الدخول) ---
+st.sidebar.success("✅ تم تسجيل الدخول - الجامعة التكنولوجية")
 
-# --- بيانات الشبكة والفيزياء ---
-SPEED_OF_LIGHT = 200 
+# بيانات الشبكة
 nodes = [1, 2, 3, 4, 5, 6, 7]
 link_distances = {
     (1,2): 120, (2,3): 150, (3,4): 100, (4,5): 200, 
@@ -55,28 +50,28 @@ full_dist = {**link_distances, **{(v, u): d for (u, v), d in link_distances.item
 if 'demands' not in st.session_state:
     st.session_state.demands = [{"src": 1, "dst": 4, "name": "Main_Trunk_01"}]
 
-# --- القائمة الجانبية ---
-st.sidebar.header("⚙️ التحكم بالموارد")
-waves_limit = st.sidebar.slider("عدد الأطوال الموجية لكل ليف", 1, 25, 15)
+# القائمة الجانبية
+st.sidebar.header("⚙️ إعدادات الموارد")
+waves_limit = st.sidebar.slider("عدد الأطوال الموجية (Wavelengths)", 1, 30, 15)
 
-with st.sidebar.expander("➕ إضافة خدمة محمية"):
-    s_n = st.selectbox("من العقدة", nodes, index=0)
-    d_n = st.selectbox("إلى العقدة", nodes, index=4)
-    s_name = st.text_input("اسم الخدمة", f"Service_{len(st.session_state.demands)+1}")
-    if st.sidebar.button("تفعيل المسار"):
-        if s_n != d_n:
-            st.session_state.demands.append({"src": s_n, "dst": d_n, "name": s_name})
+with st.sidebar.expander("➕ إضافة خدمة مرور جديدة"):
+    s_node = st.selectbox("من العقدة", nodes, index=0)
+    d_node = st.selectbox("إلى العقدة", nodes, index=4)
+    s_name = st.text_input("اسم الخدمة", f"Svc_{len(st.session_state.demands)+1}")
+    if st.sidebar.button("تفعيل الخدمة"):
+        if s_node != d_node:
+            st.session_state.demands.append({"src": s_node, "dst": d_node, "name": s_name})
 
-if st.sidebar.button("تفريغ الشبكة"):
+if st.sidebar.button("🗑️ مسح كافة البيانات"):
     st.session_state.demands = []
 
-st.sidebar.header(" محاكاة قطع الألياف")
-fail_active = st.sidebar.checkbox("تفعيل قطع في الوصلة")
-failed_link = st.sidebar.selectbox("اختر الوصلة المقطوعة", base_links)
+st.sidebar.header("💥 اختبار الصمود (Stress Test)")
+fail_on = st.sidebar.checkbox("محاكاة قطع ليف ضوئي")
+cut_link = st.sidebar.selectbox("اختر الوصلة المقطوعة", base_links)
 
-# --- محرك الحل الرياضي ---
-def solve_rwa_pro(cut=None):
-    active = [l for l in all_links if l != cut and (l[1], l[0]) != cut]
+# محرك الحل الرياضي (RWA Engine)
+def solve_final_rwa(fail=None):
+    active = [l for l in all_links if l != fail and (l[1], l[0]) != fail]
     d_list = st.session_state.demands
     w_list = list(range(1, waves_limit + 1))
     if not d_list: return []
@@ -84,6 +79,7 @@ def solve_rwa_pro(cut=None):
     prob = pulp.LpProblem("RWA_Final", pulp.LpMinimize)
     f = pulp.LpVariable.dicts("flow", (range(len(d_list)), active, w_list, [0, 1]), 0, 1, pulp.LpInteger)
 
+    # توزيع المسارات وتقليل التأخير
     prob += pulp.lpSum(f[i][l][w][0] * full_dist[l] for i in range(len(d_list)) for l in active for w in w_list) + \
             pulp.lpSum(f[i][l][w][1] * full_dist[l] * 1.5 for i in range(len(d_list)) for l in active for w in w_list)
 
@@ -97,10 +93,13 @@ def solve_rwa_pro(cut=None):
                 elif n == d: prob += in_f - out_f == 1
                 else: prob += in_f - out_f == 0
             prob += pulp.lpSum(f[i][l][w][t] for l in active if l[0] == s for w in w_list) == 1
+        
+        for l in active:
+            prob += pulp.lpSum(f[i][l][w][0] + f[i][l][w][1] for w in w_list) <= 1
 
     for l in active:
         for w in w_list:
-            prob += pulp.lpSum(f[i][l][w][0] + f[i][l][w][1] for i in range(len(d_list))) <= 1
+            prob += pulp.lpSum(f[i][l][w][t] for i in range(len(d_list)) for t in [0,1]) <= 1
 
     prob.solve(pulp.PULP_CBC_CMD(msg=0))
     res = []
@@ -111,25 +110,24 @@ def solve_rwa_pro(cut=None):
             res.append({"Name": d['name'], "Working": w_path, "Protection": p_path})
     return res
 
-# --- العرض المرئي ---
-results = solve_rwa_pro(failed_link if fail_active else None)
-col1, col2 = st.columns([1, 1.3])
+# العرض والنتائج
+results = solve_final_rwa(cut_link if fail_on else None)
+c1, c2 = st.columns([1, 1.4])
 
-with col1:
-    st.subheader("📋 حالة الخدمات")
+with c1:
+    st.subheader(" حالة المسارات")
     if results:
         for r in results:
-            with st.expander(f"🔹 {r['Name']}", expanded=True):
-                st.write(f"✅ الأساسي: {r['Working']}")
-                st.write(f"🛡️ الاحتياطي: {r['Protection']}")
-                if fail_active:
-                    if any(failed_link == l or (failed_link[1], failed_link[0]) == l for l in r['Working']):
-                        st.error("تم القطع! التحويل للاحتياطي جاري...")
+            with st.expander(f"🔹 Service: {r['Name']}", expanded=True):
+                st.write(f"**Primary Path:** {r['Working']}")
+                st.write(f"**Backup Path:** {r['Protection']}")
+                if fail_on and any(cut_link == l or (cut_link[1], cut_link[0]) == l for l in r['Working']):
+                    st.error(" فشل المسار الأساسي! تم التحويل للاحتياطي.")
     else:
-        st.error("السعة غير كافية، يرجى زيادة الأطوال الموجية")
+        st.error(" لا توجد موارد كافية. يرجى زيادة الأطوال الموجية.")
 
-with col2:
-    st.subheader("🌐 خريطة الشبكة الذكية")
+with c2:
+    st.subheader("🌐 خريطة الشبكة")
     G = nx.Graph(); G.add_edges_from(base_links)
     pos = nx.spring_layout(G, seed=42)
     fig, ax = plt.subplots(figsize=(10, 8))
@@ -137,14 +135,14 @@ with col2:
     nx.draw_networkx_labels(G, pos, font_color='white', font_weight='bold', ax=ax)
     nx.draw_networkx_edges(G, pos, edgelist=base_links, edge_color='#333', style='dashed', alpha=0.3, ax=ax)
     
-    if fail_active:
-        nx.draw_networkx_edges(G, pos, edgelist=[failed_link], edge_color='red', width=7, ax=ax)
+    if fail_on:
+        nx.draw_networkx_edges(G, pos, edgelist=[cut_link], edge_color='red', width=7, ax=ax)
 
     colors = ['#00FF00', '#0099FF', '#FFCC00', '#FF00FF']
     for i, r in enumerate(results):
         c = colors[i % len(colors)]
-        nx.draw_networkx_edges(G, pos, edgelist=r['Working'], edge_color=c, width=4, ax=ax)
-        nx.draw_networkx_edges(G, pos, edgelist=r['Protection'], edge_color=c, width=2, style='dotted', ax=ax)
+        nx.draw_networkx_edges(G, pos, edgelist=r['Working'], edge_color=c, width=4.5, ax=ax)
+        nx.draw_networkx_edges(G, pos, edgelist=r['Protection'], edge_color=c, width=2.5, style='dotted', ax=ax)
 
     ax.set_facecolor('#0E1117'); fig.patch.set_facecolor('#0E1117'); plt.axis('off')
     st.pyplot(fig)
