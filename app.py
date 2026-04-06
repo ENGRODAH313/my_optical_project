@@ -19,9 +19,11 @@ if not st.session_state.entered:
     col_t1, col_t2, col_t3 = st.columns([1, 2, 1])
     with col_t2:
         st.image("https://cdn-icons-png.flaticon.com/512/2103/2103633.png", width=100) # أيقونة تعبر عن الألياف
-        st.title("🛡️ مشروع نظام إدارة الشبكات الضوئية")
-        st.header("إعداد الطالب: ENGRODAH313")
-        st.subheader("إشراف: قسم هندسة الاتصالات / الحاسبات")
+        st.title(" مشروع نظام إدارة الشبكات الضوئية")
+        st.header("إعداد الطالب: رضا صلاح الدين ,مصطفى صلاح ")
+        st.subheader("Technological University
+        كلية: هندسة الاتصالات ضوئية 
+        الاشراف: د. احمد جياد كاظم")
         st.markdown("""
         ---
         **وصف المشروع:**
@@ -29,13 +31,13 @@ if not st.session_state.entered:
         مع تفعيل خاصية الحماية الذاتية (1+1 Protection) لضمان استمرارية الخدمة.
         """)
         
-        if st.button("🚀 الدخول إلى لوحة التحكم (Enter Dashboard)"):
+        if st.button("(Enter Dashboard)"):
             st.session_state.entered = True
             st.rerun()
     st.stop() # إيقاف التنفيذ هنا حتى يضغط المستخدم على الزر
 
 # --- 2. محتوى المشروع الأساسي (يظهر بعد الضغط على الزر) ---
-st.title("🌐 لوحة تحكم الشبكة الضوئية الذكية")
+st.title(" لوحة تحكم الشبكة الضوئية الذكية")
 st.sidebar.success("تم تسجيل الدخول بنجاح")
 
 # --- بيانات الشبكة والفيزياء ---
@@ -68,7 +70,7 @@ with st.sidebar.expander("➕ إضافة خدمة محمية"):
 if st.sidebar.button("تفريغ الشبكة"):
     st.session_state.demands = []
 
-st.sidebar.header("💥 محاكاة قطع الألياف")
+st.sidebar.header(" محاكاة قطع الألياف")
 fail_active = st.sidebar.checkbox("تفعيل قطع في الوصلة")
 failed_link = st.sidebar.selectbox("اختر الوصلة المقطوعة", base_links)
 
